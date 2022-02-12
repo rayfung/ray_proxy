@@ -1,0 +1,39 @@
+html, body {
+  width: 100px;
+}
+
+.hidden {
+  display: none;
+}
+
+.button {
+  margin: 3% auto;
+  padding: 4px;
+  text-align: center;
+  font-size: 1.5em;
+  cursor: pointer;
+}
+
+.direct {
+  background-color: #FBFBC9;
+}
+
+.direct:hover {
+  background-color: #EAEA9D;
+}
+
+.proxy {
+  background-color: #E5F2F2;
+}
+
+.proxy:hover {
+  background-color: #CFF2F2;
+}
+
+.option {
+  background-color: #E5F2F2;
+}
+
+.option:hover {
+  background-color: #CFF2F2;
+}
