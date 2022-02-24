@@ -1,6 +1,6 @@
 html, body {
-  width: 180px;
-  font-family: monospace;
+  width: 190px;
+  font-family: 'Consolas', monospace;
   cursor: default;
 }
 
@@ -12,7 +12,7 @@ html, body {
   margin: 3% auto;
   padding: 4px;
   text-align: center;
-  font-size: 1.0em;
+  font-size: 1.2em;
 }
 
 .checkbox {
