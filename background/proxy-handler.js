@@ -7,30 +7,39 @@ let proxyPort = 0;
 let globalProxyId = 0;
 let windowProxyId = {};
 
-browser.storage.local.get(data => {
-  if (typeof data.proxyHost !== 'undefined') {
-    proxyHost = data.proxyHost;
+initProxy();
+
+
+async function initProxy() {
+  // First of all, listen for proxy settings changes
+  browser.storage.onChanged.addListener(changeData => {
+    if (changeData.proxyHost) {
+      proxyHost = changeData.proxyHost.newValue;
+    }
+
+    if (changeData.proxyPort) {
+      proxyPort = changeData.proxyPort.newValue;
+    }
+  });
+
+  // Then get initial proxy settings
+  const initialConfig = await browser.storage.local.get();
+
+  if (typeof initialConfig.proxyHost !== 'undefined') {
+    proxyHost = initialConfig.proxyHost;
   }
 
-  if (typeof data.proxyPort !== 'undefined') {
-    proxyPort = data.proxyPort;
-  }
-});
-
-browser.storage.onChanged.addListener(changeData => {
-  if (changeData.proxyHost) {
-    proxyHost = changeData.proxyHost.newValue;
+  if (typeof initialConfig.proxyPort !== 'undefined') {
+    proxyPort = initialConfig.proxyPort;
   }
 
-  if (changeData.proxyPort) {
-    proxyPort = changeData.proxyPort.newValue;
-  }
-});
+  // All data are ready, it is time to listen for a request to open a webpage
+  browser.proxy.onRequest.addListener(handleProxyRequest, { urls: ["<all_urls>"] });
 
-// Managed the proxy
-
-// Listen for a request to open a webpage
-browser.proxy.onRequest.addListener(handleProxyRequest, {urls: ["<all_urls>"]});
+  // Finally, enable browser action functionality
+  await updateIcon();
+  browser.runtime.onMessage.addListener(handleMessage);
+}
 
 // On the request to open a webpage
 async function handleProxyRequest(requestInfo) {
@@ -133,6 +142,3 @@ function handleMessage(msg) {
 
   updateIcon();
 }
-
-updateIcon();
-browser.runtime.onMessage.addListener(handleMessage);

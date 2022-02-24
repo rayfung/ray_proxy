@@ -4,6 +4,10 @@ const cboxGlobal = document.querySelector("#cbox_global");
 const cboxWindow = document.querySelector("#cbox_window");
 const btnOption = document.querySelector("#btn_option");
 
+listenForClicks();
+updateMenuItems();
+
+
 async function onChangeGlobalProxy() {
   await browser.runtime.sendMessage({ command: cboxGlobal.checked ? "global_proxy" : "global_direct" });
   await updateMenuItems();
@@ -39,6 +43,3 @@ async function updateMenuItems(windowId) {
   cboxGlobal.checked = globalState;
   cboxWindow.checked = proxyState.window === undefined ? globalState : (proxyState.window != 0);
 }
-
-listenForClicks();
-updateMenuItems();
