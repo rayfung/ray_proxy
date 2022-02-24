@@ -39,9 +39,15 @@ async function handleProxyRequest(requestInfo) {
     return getProxyById(globalProxyId, requestInfo);
   }
 
-  // Try getting window specific config
-  let tabInfo = await browser.tabs.get(requestInfo.tabId);
-  return getProxyById(getWindowFinalProxyId(tabInfo.windowId), requestInfo);
+  try {
+    // Try getting window specific config
+    let tabInfo = await browser.tabs.get(requestInfo.tabId);
+    return getProxyById(getWindowFinalProxyId(tabInfo.windowId), requestInfo);
+  } catch {
+    // Block request in case of error
+    console.error("Ray Proxy: Failed to get window specific proxy.\nRequest blocked: " + requestInfo.url);
+    return getBlockedProxy();
+  }
 }
 
 function isWindowProxyEmpty() {
@@ -66,6 +72,10 @@ function getProxyById(proxyId, requestInfo) {
 
     return { type: "socks", host: proxyHost, port: proxyPort, proxyDNS: true };
   }
+}
+
+function getBlockedProxy() {
+  return { type: "socks", host: "127.0.0.1", port: 65535, proxyDNS: true };
 }
 
 // Log any errors from the proxy script
