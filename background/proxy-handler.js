@@ -13,12 +13,6 @@ browser.storage.local.get(data => {
   if (typeof data.proxyPort !== 'undefined') {
     proxyPort = data.proxyPort;
   }
-
-  if (typeof data.proxyId !== 'undefined') {
-    proxyId = data.proxyId;
-  }
-
-  updateIcon();
 });
 
 browser.storage.onChanged.addListener(changeData => {
@@ -29,12 +23,6 @@ browser.storage.onChanged.addListener(changeData => {
   if (changeData.proxyPort) {
     proxyPort = changeData.proxyPort.newValue;
   }
-
-  if (changeData.proxyId) {
-    proxyId = changeData.proxyId.newValue;
-  }
-
-  updateIcon();
 });
 
 // Managed the proxy
