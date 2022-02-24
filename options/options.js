@@ -6,8 +6,8 @@ const proxySaveButton = document.querySelector("#proxy-save");
 const proxyReloadButton = document.querySelector("#proxy-reload");
 
 function updateUI(settings) {
-  proxyHostInput.value = settings.proxyHost ? settings.proxyHost : "";
-  proxyPortInput.value = settings.proxyPort.toString();
+  proxyHostInput.value = settings.proxyHost === undefined ? "" : settings.proxyHost;
+  proxyPortInput.value = settings.proxyPort === undefined ? "" : settings.proxyPort;
 }
 
 function saveSettings() {

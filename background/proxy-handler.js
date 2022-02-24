@@ -5,14 +5,6 @@ let proxyHost = "127.0.0.1";
 let proxyPort = 0;
 let proxyId = 0;
 
-browser.runtime.onInstalled.addListener(details => {
-  browser.storage.local.set({
-    proxyHost: proxyHost,
-    proxyPort: proxyPort,
-    proxyId: proxyId
-  });
-});
-
 browser.storage.local.get(data => {
   if (typeof data.proxyHost !== 'undefined') {
     proxyHost = data.proxyHost;
