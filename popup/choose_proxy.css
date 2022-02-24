@@ -1,5 +1,7 @@
 html, body {
-  width: 100px;
+  width: 180px;
+  font-family: monospace;
+  cursor: default;
 }
 
 .hidden {
@@ -10,8 +12,11 @@ html, body {
   margin: 3% auto;
   padding: 4px;
   text-align: center;
-  font-size: 1.5em;
-  cursor: pointer;
+  font-size: 1.0em;
+}
+
+.checkbox {
+  cursor: default;
 }
 
 .direct {

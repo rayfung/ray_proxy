@@ -8,9 +8,16 @@
 
 <body>
   <div id="popup-content">
-    <div class="button direct">Direct</div>
-    <div class="button proxy">Proxy</div>
-    <div class="button option">Option</div>
+    <div class="button proxy">
+      <input type="checkbox" id="cbox_global" class="checkbox">
+      <label for="cbox_global" class="checkbox">Global Proxy</label>
+    </div>
+    <div class="button proxy">
+      <input type="checkbox" id="cbox_window" class="checkbox">
+      <label for="cbox_window" class="checkbox">Window Proxy</label>
+    </div>
+
+    <div id="btn_option" class="button option">Option</div>
   </div>
   <script src="choose_proxy.js"></script>
 </body>
