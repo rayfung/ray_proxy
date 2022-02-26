@@ -1,11 +1,17 @@
 // vim: set sw=2 ts=2 softtabstop=2 expandtab :
 
+const gcTabCount = 64;
+const gcWindowCount = 32;
+
 let bypassHosts = ["localhost", "[::1]"];
 let proxyHost = "127.0.0.1";
 let proxyPort = 0;
 
 let globalProxyId = 0;
 let windowProxyId = {};
+let tabWinMap = {};
+let removedTabs = [];
+let removedWindows = [];
 
 initProxy();
 
@@ -33,28 +39,83 @@ async function initProxy() {
     proxyPort = initialConfig.proxyPort;
   }
 
+  // Used to update tab-window mapping
+  browser.tabs.onAttached.addListener(onTabAttached);
+  browser.tabs.onCreated.addListener(onTabCreated);
+  browser.tabs.onRemoved.addListener(onTabRemoved);
+  browser.windows.onRemoved.addListener(onWindowRemoved);
+
+  // Initialize tab-window mapping from currently open tabs
+  // Be aware tabs closed during this stage may become garbage
+  const allTabs = await browser.tabs.query({});
+  for (const x of allTabs) {
+    tabWinMap[x.id] = x.windowId;
+  }
+
   // All data are ready, it is time to listen for a request to open a webpage
   browser.proxy.onRequest.addListener(handleProxyRequest, { urls: ["<all_urls>"] });
 
   // Finally, enable browser action functionality
-  await updateIcon();
   browser.runtime.onMessage.addListener(handleMessage);
+  await updateIcon();
+}
+
+function onTabAttached(tabId, attachInfo) {
+  tabWinMap[tabId] = attachInfo.newWindowId;
+}
+
+function onTabCreated(tabInfo) {
+  tabWinMap[tabInfo.id] = tabInfo.windowId;
+}
+
+function onTabRemoved(tabId, removeInfo) {
+  const count = removedTabs.push(tabId);
+  if (count >= gcTabCount) {
+    const tmp = removedTabs.splice(0, gcTabCount / 2);
+    for (const x of tmp) {
+      delete tabWinMap[x];
+    }
+  }
+}
+
+function onWindowRemoved(windowId) {
+  const count = removedWindows.push(windowId);
+  if (count >= gcWindowCount) {
+    const tmp = removedWindows.splice(0, gcWindowCount / 2);
+    for (const x of tmp) {
+      delete windowProxyId[x];
+    }
+  }
+}
+
+async function fetchWindowIdOfTab(tabId) {
+  // Be aware that tabInfo.id != tabId in some cases
+  // That case is: tabInfo.id == closed_tab_id, tabId == fake_unused_tab_id
+  // So we cannot save fetched result because tabId may be a fake id and it refers to a closed tab
+  let tabInfo = await browser.tabs.get(tabId);
+  return tabInfo.windowId;
 }
 
 // On the request to open a webpage
 async function handleProxyRequest(requestInfo) {
-  if (isWindowProxyEmpty() || requestInfo.tabId == -1) {
+  const tabId = requestInfo.tabId;
+  const urlString = requestInfo.url;
+
+  if (isWindowProxyEmpty() || tabId == -1) {
     // Use global config
-    return getProxyById(globalProxyId, requestInfo);
+    return getProxyById(globalProxyId, urlString);
   }
 
   try {
     // Try getting window specific config
-    let tabInfo = await browser.tabs.get(requestInfo.tabId);
-    return getProxyById(getWindowFinalProxyId(tabInfo.windowId), requestInfo);
+    let windowId = tabWinMap[tabId];
+    if (windowId === undefined) {
+      windowId = await fetchWindowIdOfTab(tabId);
+    }
+    return getProxyById(getWindowFinalProxyId(windowId), urlString);
   } catch {
     // Block request in case of error
-    console.error("Ray Proxy: Failed to get window specific proxy.\nRequest blocked: " + requestInfo.url);
+    console.error("Ray Proxy: Failed to get window specific proxy.\nRequest blocked: " + urlString);
     return getBlockedProxy();
   }
 }
@@ -69,12 +130,12 @@ function getWindowFinalProxyId(windowId) {
   return proxyId === undefined ? globalProxyId : proxyId;
 }
 
-function getProxyById(proxyId, requestInfo) {
+function getProxyById(proxyId, urlString) {
   if (proxyId == 0) {
     return { type: "direct" };
   }
   else {
-    const url = new URL(requestInfo.url);
+    const url = new URL(urlString);
     if (url.hostname.startsWith("127.") || bypassHosts.indexOf(url.hostname) != -1) {
       return { type: "direct" };
     }
