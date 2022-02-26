@@ -97,7 +97,7 @@ async function fetchWindowIdOfTab(tabId) {
 }
 
 // On the request to open a webpage
-async function handleProxyRequest(requestInfo) {
+function handleProxyRequest(requestInfo) {
   const tabId = requestInfo.tabId;
   const urlString = requestInfo.url;
 
@@ -110,7 +110,8 @@ async function handleProxyRequest(requestInfo) {
     // Try getting window specific config
     let windowId = tabWinMap[tabId];
     if (windowId === undefined) {
-      windowId = await fetchWindowIdOfTab(tabId);
+      console.error(`Ray Proxy: Tab ${tabId} not found.\nRequest blocked: ${urlString}`);
+      return getBlockedProxy();
     }
     return getProxyById(getWindowFinalProxyId(windowId), urlString);
   } catch {
